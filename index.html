@@ -16,7 +16,8 @@
 
     <div class="flex bg-white border-b border-slate-200">
         <button id="tab-dir" class="flex-1 py-3 text-sm font-semibold text-blue-600 border-b-2 border-blue-600" onclick="switchTab('directory')">Directory</button>
-        <button id="tab-map" class="flex-1 py-3 text-sm font-semibold text-slate-500" onclick="switchTab('map')">Deck Map</button>
+        <button id="tab-map" class="flex-1 py-3 text-sm font-semibold text-slate-500" onclick="switchTab('map')">Deck Map (PDF)</button>
+        <button id="tab-overview" class="flex-1 py-3 text-sm font-semibold text-slate-500" onclick="switchTab('overview')">Overview</button>
     </div>
 
     <main class="flex-1 overflow-auto p-4">
@@ -33,10 +34,20 @@
             <iframe id="pdfFrame" src="./mardi-gras-deck-plan-pdf.pdf#view=FitH" class="w-full h-full bg-slate-200"></iframe>
         </div>
 
+        <div id="view-overview" class="hidden h-[75vh] border border-slate-200 rounded-xl overflow-hidden shadow-sm relative bg-slate-200">
+            <div class="absolute top-2 right-4 flex gap-2 z-10">
+                <button onclick="zoomImg(0.25)" class="bg-slate-900 text-white w-8 h-8 rounded-full opacity-80 hover:opacity-100 shadow-md font-bold">+</button>
+                <button onclick="zoomImg(-0.25)" class="bg-slate-900 text-white w-8 h-8 rounded-full opacity-80 hover:opacity-100 shadow-md font-bold">-</button>
+                <button onclick="resetZoom()" class="bg-slate-900 text-white px-3 h-8 rounded-full opacity-80 hover:opacity-100 shadow-md text-xs font-bold">Reset</button>
+            </div>
+            <div class="overflow-auto w-full h-full flex items-center justify-center">
+                <img id="overviewImg" src="./deckmap.png" alt="Deck Overview" class="max-w-none transition-transform origin-center" style="transform: scale(1);">
+            </div>
+        </div>
+
     </main>
 
     <script>
-        // Data
         const decks = [
             { deck: 4, name: "Deck 4", venues: [{name: "Family Harbor Lounge", desc: "Exclusive family hangout with snacks"}, {name: "Medical Center", desc: "Ship hospital"}, {name: "Staterooms", desc: "Cabins"}] },
             { deck: 5, name: "Deck 5", venues: [{name: "Grand Central", desc: "Atrium and entertainment hub"}, {name: "Main Dining Room", desc: "Included sit-down dining"}, {name: "Chef's Table", desc: "VIP culinary experience"}] },
@@ -49,17 +60,12 @@
             { deck: 19, name: "Deck 19", venues: [{name: "BOLT", desc: "Rollercoaster"}, {name: "SportsSquare", desc: "Mini-golf, ropes course"}, {name: "Loft 19", desc: "Exclusive retreat"}] }
         ];
 
-        // State
         let showFavorites = false;
         let favorites = JSON.parse(localStorage.getItem('mg-favs') || '[]');
+        let currentZoom = 1;
 
-        // Logic
         function toggleFav(venueName) {
-            if (favorites.includes(venueName)) {
-                favorites = favorites.filter(v => v !== venueName);
-            } else {
-                favorites.push(venueName);
-            }
+            favorites = favorites.includes(venueName) ? favorites.filter(v => v !== venueName) : [...favorites, venueName];
             localStorage.setItem('mg-favs', JSON.stringify(favorites));
             renderDecks();
         }
@@ -67,77 +73,59 @@
         function toggleFavFilter() {
             showFavorites = !showFavorites;
             const btn = document.getElementById('favToggleBtn');
-            btn.className = showFavorites 
-                ? "px-4 py-3 rounded-xl border shadow-sm font-semibold bg-yellow-100 border-yellow-400 text-yellow-700" 
-                : "px-4 py-3 rounded-xl border shadow-sm font-semibold bg-white border-slate-200 text-slate-500";
+            btn.className = showFavorites ? "px-4 py-3 rounded-xl border shadow-sm font-semibold bg-yellow-100 border-yellow-400 text-yellow-700" : "px-4 py-3 rounded-xl border shadow-sm font-semibold bg-white border-slate-200 text-slate-500";
             btn.innerText = showFavorites ? '⭐' : '☆';
             renderDecks();
         }
 
         function switchTab(tab) {
-            document.getElementById('view-directory').style.display = tab === 'directory' ? 'block' : 'none';
-            document.getElementById('view-map').style.display = tab === 'map' ? 'block' : 'none';
-            
-            const tabDir = document.getElementById('tab-dir');
-            const tabMap = document.getElementById('tab-map');
-            
-            if (tab === 'directory') {
-                tabDir.className = "flex-1 py-3 text-sm font-semibold text-blue-600 border-b-2 border-blue-600";
-                tabMap.className = "flex-1 py-3 text-sm font-semibold text-slate-500 hover:bg-slate-50";
-            } else {
-                tabMap.className = "flex-1 py-3 text-sm font-semibold text-blue-600 border-b-2 border-blue-600";
-                tabDir.className = "flex-1 py-3 text-sm font-semibold text-slate-500 hover:bg-slate-50";
-            }
+            ['directory', 'map', 'overview'].forEach(t => {
+                document.getElementById(`view-${t}`).style.display = t === tab ? 'block' : 'none';
+                
+                const tabBtn = document.getElementById(`tab-${t}`);
+                if (t === tab) {
+                    tabBtn.className = "flex-1 py-3 text-sm font-semibold text-blue-600 border-b-2 border-blue-600";
+                } else {
+                    tabBtn.className = "flex-1 py-3 text-sm font-semibold text-slate-500 hover:bg-slate-50";
+                }
+            });
+        }
+
+        function zoomImg(step) {
+            currentZoom = Math.max(0.25, currentZoom + step); // Prevents zooming out too far
+            document.getElementById('overviewImg').style.transform = `scale(${currentZoom})`;
+        }
+
+        function resetZoom() {
+            currentZoom = 1;
+            document.getElementById('overviewImg').style.transform = `scale(1)`;
         }
 
         function renderDecks() {
             const query = document.getElementById('searchInput').value.toLowerCase();
             const container = document.getElementById('deckList');
             container.innerHTML = '';
-
             let hasResults = false;
 
             decks.forEach(deck => {
-                const matchedVenues = deck.venues.filter(v => {
-                    const matchesSearch = v.name.toLowerCase().includes(query) || v.desc.toLowerCase().includes(query);
-                    const matchesFav = !showFavorites || favorites.includes(v.name);
-                    return matchesSearch && matchesFav;
-                });
-
-                const matchesDeckName = !showFavorites && deck.name.toLowerCase().includes(query);
-                const finalVenues = matchesDeckName ? deck.venues.filter(v => !showFavorites || favorites.includes(v.name)) : matchedVenues;
+                const matchedVenues = deck.venues.filter(v => (v.name.toLowerCase().includes(query) || v.desc.toLowerCase().includes(query)) && (!showFavorites || favorites.includes(v.name)));
+                const finalVenues = (!showFavorites && deck.name.toLowerCase().includes(query)) ? deck.venues.filter(v => !showFavorites || favorites.includes(v.name)) : matchedVenues;
 
                 if (finalVenues.length > 0) {
                     hasResults = true;
-                    let html = `<div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-                        <div class="bg-slate-100 px-4 py-2 font-bold text-slate-700 border-b border-slate-200">${deck.name}</div>
-                        <ul class="divide-y divide-slate-100">`;
-                    
+                    let html = `<div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden"><div class="bg-slate-100 px-4 py-2 font-bold text-slate-700 border-b border-slate-200">${deck.name}</div><ul class="divide-y divide-slate-100">`;
                     finalVenues.forEach(v => {
                         const isFav = favorites.includes(v.name);
-                        html += `<li class="px-4 py-3 flex items-start justify-between">
-                            <div class="flex flex-col">
-                                <span class="text-sm font-semibold text-slate-800">${v.name}</span>
-                                <span class="text-xs text-slate-500">${v.desc}</span>
-                            </div>
-                            <button onclick="toggleFav('${v.name}')" class="p-2 text-xl ${isFav ? 'text-yellow-500' : 'text-slate-300'}">
-                                ${isFav ? '★' : '☆'}
-                            </button>
-                        </li>`;
+                        html += `<li class="px-4 py-3 flex items-start justify-between"><div class="flex flex-col"><span class="text-sm font-semibold text-slate-800">${v.name}</span><span class="text-xs text-slate-500">${v.desc}</span></div><button onclick="toggleFav('${v.name}')" class="p-2 text-xl ${isFav ? 'text-yellow-500' : 'text-slate-300'}">${isFav ? '★' : '☆'}</button></li>`;
                     });
-                    
-                    html += `</ul></div>`;
-                    container.innerHTML += html;
+                    container.innerHTML += html + `</ul></div>`;
                 }
             });
-
             if (!hasResults) container.innerHTML = '<div class="text-center py-8 text-slate-500">No venues found.</div>';
         }
 
-        // Initialize App
         renderDecks();
 
-        // Register Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js').catch(err => console.error('SW Error:', err));
