@@ -7,26 +7,142 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="manifest" href="data:application/manifest+json,{'name':'Mardi Gras Nav','short_name':'MG Nav','start_url':'./','display':'standalone','background_color':'#f8fafc','theme_color':'#0f172a'}">
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans">
-    <div id="root"></div>
+<body class="bg-slate-50 text-slate-800 font-sans flex flex-col min-h-screen">
 
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <header class="bg-slate-900 text-white p-4 shadow-md sticky top-0 z-10 flex flex-col items-center">
+        <h1 class="text-xl font-bold">Mardi Gras Navigator</h1>
+        <p class="text-xs text-slate-300 mt-1">Offline Mode Ready</p>
+    </header>
 
-    <script type="text/babel" src="./App.jsx"></script>
-    
-    <script type="text/babel">
-      const root = ReactDOM.createRoot(document.getElementById('root'));
-      root.render(<App />);
-    </script>
+    <div class="flex bg-white border-b border-slate-200">
+        <button id="tab-dir" class="flex-1 py-3 text-sm font-semibold text-blue-600 border-b-2 border-blue-600" onclick="switchTab('directory')">Directory</button>
+        <button id="tab-map" class="flex-1 py-3 text-sm font-semibold text-slate-500" onclick="switchTab('map')">Deck Map</button>
+    </div>
+
+    <main class="flex-1 overflow-auto p-4">
+        
+        <div id="view-directory" class="max-w-2xl mx-auto space-y-4">
+            <div class="flex gap-2">
+                <input type="text" id="searchInput" placeholder="Search venues..." class="w-full px-4 py-3 rounded-xl border border-slate-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" oninput="renderDecks()">
+                <button id="favToggleBtn" onclick="toggleFavFilter()" class="px-4 py-3 rounded-xl border shadow-sm font-semibold bg-white border-slate-200 text-slate-500">☆</button>
+            </div>
+            <div id="deckList" class="space-y-3 pb-8"></div>
+        </div>
+
+        <div id="view-map" class="hidden h-[75vh] border border-slate-200 rounded-xl overflow-hidden shadow-sm relative">
+            <iframe id="pdfFrame" src="./mardi-gras-deck-plan-pdf.pdf#view=FitH" class="w-full h-full bg-slate-200"></iframe>
+        </div>
+
+    </main>
 
     <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js').catch(err => console.error('SW Error:', err));
-        });
-      }
+        // Data
+        const decks = [
+            { deck: 4, name: "Deck 4", venues: [{name: "Family Harbor Lounge", desc: "Exclusive family hangout with snacks"}, {name: "Medical Center", desc: "Ship hospital"}, {name: "Staterooms", desc: "Cabins"}] },
+            { deck: 5, name: "Deck 5", venues: [{name: "Grand Central", desc: "Atrium and entertainment hub"}, {name: "Main Dining Room", desc: "Included sit-down dining"}, {name: "Chef's Table", desc: "VIP culinary experience"}] },
+            { deck: 6, name: "Deck 6", venues: [{name: "Casino", desc: "Slots and table games"}, {name: "Emeril's Bistro 1396", desc: "Creole & New Orleans cuisine"}, {name: "Fortune Teller Bar", desc: "Craft cocktails"}, {name: "Brass Magnolia", desc: "Jazz bar"}, {name: "Theater", desc: "Main stage productions"}, {name: "Punchliner Comedy Club", desc: "Stand-up comedy"}, {name: "Cherry On Top", desc: "Candy and gifts"}, {name: "Piano Bar 88", desc: "Sing-along piano bar"}] },
+            { deck: 7, name: "Deck 7", venues: [{name: "Fahrenheit 555 Steakhouse", desc: "Premium steak and seafood"}, {name: "Limelight Lounge", desc: "Nightclub and live music"}, {name: "Alchemy Bar", desc: "Vintage mixology"}, {name: "Carnival Kitchen", desc: "Interactive cooking classes"}] },
+            { deck: 8, name: "Deck 8", venues: [{name: "Havana Pool & Bar", desc: "Cuban-themed retreat"}, {name: "Chibang!", desc: "Mexican/Chinese fusion"}, {name: "Guy's Pig & Anchor", desc: "BBQ & craft beer"}, {name: "La Piazza", desc: "Italian street food"}, {name: "Cucina del Capitano", desc: "Italian dining"}, {name: "Pizzeria del Capitano", desc: "24-hour pizza"}, {name: "Bonsai Sushi", desc: "Sushi"}, {name: "Bonsai Teppanyaki", desc: "Japanese steakhouse"}] },
+            { deck: 16, name: "Deck 16", venues: [{name: "Lido Pool", desc: "Main pool area"}, {name: "RedFrog Tiki Bar", desc: "Rum cocktails"}, {name: "BlueIguana Cantina", desc: "Mexican tacos/burritos"}, {name: "Street Eats", desc: "Open-air street food"}, {name: "Seafood Shack", desc: "New England-style seafood"}, {name: "Big Chicken", desc: "Shaq's fried chicken"}, {name: "Lido Marketplace", desc: "Buffet"}] },
+            { deck: 17, name: "Deck 17", venues: [{name: "Cloud 9 Spa", desc: "Massages and salon"}, {name: "Fitness Center", desc: "Gym"}, {name: "Guy's Burger Joint", desc: "Burgers and fries"}] },
+            { deck: 18, name: "Deck 18", venues: [{name: "Serenity Retreat", desc: "Adults-only relaxation"}, {name: "WaterWorks", desc: "Water slides"}, {name: "Camp Ocean", desc: "Kids' club"}] },
+            { deck: 19, name: "Deck 19", venues: [{name: "BOLT", desc: "Rollercoaster"}, {name: "SportsSquare", desc: "Mini-golf, ropes course"}, {name: "Loft 19", desc: "Exclusive retreat"}] }
+        ];
+
+        // State
+        let showFavorites = false;
+        let favorites = JSON.parse(localStorage.getItem('mg-favs') || '[]');
+
+        // Logic
+        function toggleFav(venueName) {
+            if (favorites.includes(venueName)) {
+                favorites = favorites.filter(v => v !== venueName);
+            } else {
+                favorites.push(venueName);
+            }
+            localStorage.setItem('mg-favs', JSON.stringify(favorites));
+            renderDecks();
+        }
+
+        function toggleFavFilter() {
+            showFavorites = !showFavorites;
+            const btn = document.getElementById('favToggleBtn');
+            btn.className = showFavorites 
+                ? "px-4 py-3 rounded-xl border shadow-sm font-semibold bg-yellow-100 border-yellow-400 text-yellow-700" 
+                : "px-4 py-3 rounded-xl border shadow-sm font-semibold bg-white border-slate-200 text-slate-500";
+            btn.innerText = showFavorites ? '⭐' : '☆';
+            renderDecks();
+        }
+
+        function switchTab(tab) {
+            document.getElementById('view-directory').style.display = tab === 'directory' ? 'block' : 'none';
+            document.getElementById('view-map').style.display = tab === 'map' ? 'block' : 'none';
+            
+            const tabDir = document.getElementById('tab-dir');
+            const tabMap = document.getElementById('tab-map');
+            
+            if (tab === 'directory') {
+                tabDir.className = "flex-1 py-3 text-sm font-semibold text-blue-600 border-b-2 border-blue-600";
+                tabMap.className = "flex-1 py-3 text-sm font-semibold text-slate-500 hover:bg-slate-50";
+            } else {
+                tabMap.className = "flex-1 py-3 text-sm font-semibold text-blue-600 border-b-2 border-blue-600";
+                tabDir.className = "flex-1 py-3 text-sm font-semibold text-slate-500 hover:bg-slate-50";
+            }
+        }
+
+        function renderDecks() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const container = document.getElementById('deckList');
+            container.innerHTML = '';
+
+            let hasResults = false;
+
+            decks.forEach(deck => {
+                const matchedVenues = deck.venues.filter(v => {
+                    const matchesSearch = v.name.toLowerCase().includes(query) || v.desc.toLowerCase().includes(query);
+                    const matchesFav = !showFavorites || favorites.includes(v.name);
+                    return matchesSearch && matchesFav;
+                });
+
+                const matchesDeckName = !showFavorites && deck.name.toLowerCase().includes(query);
+                const finalVenues = matchesDeckName ? deck.venues.filter(v => !showFavorites || favorites.includes(v.name)) : matchedVenues;
+
+                if (finalVenues.length > 0) {
+                    hasResults = true;
+                    let html = `<div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                        <div class="bg-slate-100 px-4 py-2 font-bold text-slate-700 border-b border-slate-200">${deck.name}</div>
+                        <ul class="divide-y divide-slate-100">`;
+                    
+                    finalVenues.forEach(v => {
+                        const isFav = favorites.includes(v.name);
+                        html += `<li class="px-4 py-3 flex items-start justify-between">
+                            <div class="flex flex-col">
+                                <span class="text-sm font-semibold text-slate-800">${v.name}</span>
+                                <span class="text-xs text-slate-500">${v.desc}</span>
+                            </div>
+                            <button onclick="toggleFav('${v.name}')" class="p-2 text-xl ${isFav ? 'text-yellow-500' : 'text-slate-300'}">
+                                ${isFav ? '★' : '☆'}
+                            </button>
+                        </li>`;
+                    });
+                    
+                    html += `</ul></div>`;
+                    container.innerHTML += html;
+                }
+            });
+
+            if (!hasResults) container.innerHTML = '<div class="text-center py-8 text-slate-500">No venues found.</div>';
+        }
+
+        // Initialize App
+        renderDecks();
+
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(err => console.error('SW Error:', err));
+            });
+        }
     </script>
 </body>
 </html>
