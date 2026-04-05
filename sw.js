@@ -1,17 +1,26 @@
-const CACHE_NAME = 'mg-nav-v1';
+const CACHE_NAME = 'mardi-gras-v1';
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/mardi-gras-deck-plan.pdf', // Your local PDF
-  // Add your compiled JS/CSS paths here
+  './',
+  './index.html',
+  './App.jsx',
+  './mardi-gras-deck-plan.pdf',
+  'https://cdn.tailwindcss.com',
+  'https://unpkg.com/react@18/umd/react.production.min.js',
+  'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js'
 ];
 
+// Install: Save all files to the phone's storage
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+  );
 });
 
+// Fetch: Serve files from storage even if offline
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request).then((response) => response || fetch(event.request))
+    caches.match(event.request).then((response) => {
+      return response || fetch(event.request);
+    })
   );
 });
