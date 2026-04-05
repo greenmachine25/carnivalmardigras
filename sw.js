@@ -1,8 +1,9 @@
-const CACHE_NAME = 'mg-nav-v1';
+const CACHE_NAME = 'mg-nav-v2';
 const ASSETS = [
   './',
   './index.html',
   './mardi-gras-deck-plan-pdf.pdf',
+  './deckmap.png',
   'https://cdn.tailwindcss.com'
 ];
 
