@@ -2,12 +2,8 @@ const CACHE_NAME = 'mg-nav-v1';
 const ASSETS = [
   './',
   './index.html',
-  './App.jsx',
   './mardi-gras-deck-plan-pdf.pdf',
-  'https://cdn.tailwindcss.com',
-  'https://unpkg.com/react@18/umd/react.production.min.js',
-  'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js',
-  'https://unpkg.com/@babel/standalone/babel.min.js'
+  'https://cdn.tailwindcss.com'
 ];
 
 self.addEventListener('install', (event) => {
