@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mg-nav-v2';
+const CACHE_NAME = 'mg-nav-v3';
 const ASSETS = [
   './',
   './index.html',
