@@ -42,34 +42,33 @@
             <iframe id="pdfFrame" src="./mardi-gras-deck-plan-pdf.pdf#view=FitH" class="w-full h-full bg-slate-200"></iframe>
         </div>
 
-        <div id="view-overview" class="hidden h-[75vh] border border-purple-200 rounded-xl overflow-hidden shadow-sm relative bg-slate-800">
+        <div id="view-overview" class="hidden h-[75vh] border border-purple-200 rounded-xl overflow-hidden shadow-sm relative bg-slate-800 touch-none">
             <div class="absolute top-2 right-4 flex gap-2 z-10">
                 <button onclick="zoomImg(0.25)" class="bg-yellow-400 text-purple-900 w-8 h-8 rounded-full opacity-90 hover:opacity-100 shadow-lg font-black text-lg">+</button>
                 <button onclick="zoomImg(-0.25)" class="bg-yellow-400 text-purple-900 w-8 h-8 rounded-full opacity-90 hover:opacity-100 shadow-lg font-black text-lg">-</button>
                 <button onclick="resetZoom()" class="bg-yellow-400 text-purple-900 px-3 h-8 rounded-full opacity-90 hover:opacity-100 shadow-lg text-xs font-black uppercase tracking-wide">Reset</button>
             </div>
-            <div class="overflow-auto w-full h-full flex items-center justify-center p-4">
-                <img id="overviewImg" src="./deckmap.png" alt="Deck Overview" class="max-w-none transition-transform origin-center shadow-2xl rounded" style="transform: scale(1);">
+            <div id="imgContainer" class="w-full h-full flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing">
+                <img id="overviewImg" src="./deckmap.png" alt="Deck Overview" class="max-w-none shadow-2xl rounded absolute" style="transform: translate(0px, 0px) scale(1); transform-origin: center;">
             </div>
         </div>
     </main>
 
     <script>
         const decks = [
-            { deck: 4, name: "Deck 4", venues: [{name: "Family Harbor Lounge", desc: "Exclusive family hangout with snacks"}, {name: "Medical Center", desc: "Ship hospital"}, {name: "Staterooms", desc: "Cabins"}] },
+            { deck: 4, name: "Deck 4", venues: [{name: "Family Harbor Lounge", desc: "Exclusive family hangout"}, {name: "Medical Center", desc: "Ship hospital"}, {name: "Staterooms", desc: "Cabins"}] },
             { deck: 5, name: "Deck 5", venues: [{name: "Grand Central", desc: "Atrium and entertainment hub"}, {name: "Main Dining Room", desc: "Included sit-down dining"}, {name: "Chef's Table", desc: "VIP culinary experience"}] },
-            { deck: 6, name: "Deck 6", venues: [{name: "Casino", desc: "Slots and table games"}, {name: "Emeril's Bistro 1396", desc: "Creole & New Orleans cuisine"}, {name: "Fortune Teller Bar", desc: "Craft cocktails"}, {name: "Brass Magnolia", desc: "Jazz bar"}, {name: "Theater", desc: "Main stage productions"}, {name: "Punchliner Comedy Club", desc: "Stand-up comedy"}, {name: "Cherry On Top", desc: "Candy and gifts"}, {name: "Piano Bar 88", desc: "Sing-along piano bar"}] },
+            { deck: 6, name: "Deck 6", venues: [{name: "Casino", desc: "Slots and table games"}, {name: "Emeril's Bistro 1396", desc: "Creole cuisine"}, {name: "Fortune Teller Bar", desc: "Craft cocktails"}, {name: "Brass Magnolia", desc: "Jazz bar"}, {name: "Theater", desc: "Main stage productions"}, {name: "Punchliner Comedy Club", desc: "Stand-up comedy"}, {name: "Cherry On Top", desc: "Candy and gifts"}, {name: "Piano Bar 88", desc: "Sing-along piano bar"}] },
             { deck: 7, name: "Deck 7", venues: [{name: "Fahrenheit 555 Steakhouse", desc: "Premium steak and seafood"}, {name: "Limelight Lounge", desc: "Nightclub and live music"}, {name: "Alchemy Bar", desc: "Vintage mixology"}, {name: "Carnival Kitchen", desc: "Interactive cooking classes"}] },
             { deck: 8, name: "Deck 8", venues: [{name: "Havana Pool & Bar", desc: "Cuban-themed retreat"}, {name: "Chibang!", desc: "Mexican/Chinese fusion"}, {name: "Guy's Pig & Anchor", desc: "BBQ & craft beer"}, {name: "La Piazza", desc: "Italian street food"}, {name: "Cucina del Capitano", desc: "Italian dining"}, {name: "Pizzeria del Capitano", desc: "24-hour pizza"}, {name: "Bonsai Sushi", desc: "Sushi"}, {name: "Bonsai Teppanyaki", desc: "Japanese steakhouse"}] },
             { deck: 16, name: "Deck 16", venues: [{name: "Lido Pool", desc: "Main pool area"}, {name: "RedFrog Tiki Bar", desc: "Rum cocktails"}, {name: "BlueIguana Cantina", desc: "Mexican tacos/burritos"}, {name: "Street Eats", desc: "Open-air street food"}, {name: "Seafood Shack", desc: "New England-style seafood"}, {name: "Big Chicken", desc: "Shaq's fried chicken"}, {name: "Lido Marketplace", desc: "Buffet"}] },
             { deck: 17, name: "Deck 17", venues: [{name: "Cloud 9 Spa", desc: "Massages and salon"}, {name: "Fitness Center", desc: "Gym"}, {name: "Guy's Burger Joint", desc: "Burgers and fries"}] },
             { deck: 18, name: "Deck 18", venues: [{name: "Serenity Retreat", desc: "Adults-only relaxation"}, {name: "WaterWorks", desc: "Water slides"}, {name: "Camp Ocean", desc: "Kids' club"}] },
-            { deck: 19, name: "Deck 19", venues: [{name: "BOLT", desc: "Rollercoaster"}, {name: "SportsSquare", desc: "Mini-golf, ropes course"}, {name: "Loft 19", desc: "Exclusive retreat"}] }
+            { deck: 19, name: "Deck 19", venues: [{name: "BOLT", desc: "Rollercoaster"}, {name: "SportsSquare", desc: "Mini-golf"}, {name: "Loft 19", desc: "Exclusive retreat"}] }
         ];
 
         let showFavorites = false;
         let favorites = JSON.parse(localStorage.getItem('mg-favs') || '[]');
-        let currentZoom = 1;
 
         function toggleFav(venueName) {
             favorites = favorites.includes(venueName) ? favorites.filter(v => v !== venueName) : [...favorites, venueName];
@@ -97,16 +96,6 @@
             });
         }
 
-        function zoomImg(step) {
-            currentZoom = Math.max(0.25, currentZoom + step);
-            document.getElementById('overviewImg').style.transform = `scale(${currentZoom})`;
-        }
-
-        function resetZoom() {
-            currentZoom = 1;
-            document.getElementById('overviewImg').style.transform = `scale(1)`;
-        }
-
         function renderDecks() {
             const query = document.getElementById('searchInput').value.toLowerCase();
             const container = document.getElementById('deckList');
@@ -122,8 +111,6 @@
                     let html = `<div class="bg-white rounded-xl shadow-md border-t-4 border-green-600 overflow-hidden"><div class="bg-purple-50 px-4 py-2 font-black text-purple-900 border-b border-purple-100 uppercase tracking-wide">${deck.name}</div><ul class="divide-y divide-purple-50">`;
                     finalVenues.forEach(v => {
                         const isFav = favorites.includes(v.name);
-                        
-                        // FIX: Safely passing the venue name using an HTML data attribute to avoid quote crashes
                         html += `<li class="px-4 py-3 flex items-start justify-between hover:bg-purple-50/50 transition-colors"><div class="flex flex-col"><span class="text-sm font-bold text-slate-800">${v.name}</span><span class="text-xs text-slate-500">${v.desc}</span></div><button data-venue="${v.name}" onclick="toggleFav(this.dataset.venue)" class="p-2 text-2xl transition-transform hover:scale-110 ${isFav ? 'text-yellow-500' : 'text-slate-300'}">${isFav ? '★' : '☆'}</button></li>`;
                     });
                     container.innerHTML += html + `</ul></div>`;
@@ -133,6 +120,73 @@
         }
 
         renderDecks();
+
+        // --- Touch, Drag, and Pinch-to-Zoom Logic ---
+        const img = document.getElementById('overviewImg');
+        const imgContainer = document.getElementById('imgContainer');
+        let scale = 1, posX = 0, posY = 0;
+        let isDragging = false, startX, startY, startDist = 0;
+
+        function updateTransform() {
+            img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+        }
+
+        function zoomImg(step) {
+            scale = Math.max(0.25, Math.min(scale + step, 5));
+            updateTransform();
+        }
+
+        function resetZoom() {
+            scale = 1; posX = 0; posY = 0;
+            updateTransform();
+        }
+
+        // Touch Events (Mobile)
+        imgContainer.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                isDragging = true;
+                startX = e.touches[0].pageX - posX;
+                startY = e.touches[0].pageY - posY;
+            } else if (e.touches.length === 2) {
+                isDragging = false;
+                startDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+            }
+        }, { passive: false });
+
+        imgContainer.addEventListener('touchmove', (e) => {
+            e.preventDefault(); // Prevents page from scrolling while panning
+            if (e.touches.length === 1 && isDragging) {
+                posX = e.touches[0].pageX - startX;
+                posY = e.touches[0].pageY - startY;
+            } else if (e.touches.length === 2) {
+                const currentDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+                const zoomAmount = (currentDist / startDist) - 1;
+                scale = Math.max(0.25, Math.min(scale + (zoomAmount * 0.5), 5)); // 0.5 multiplier for smoother zooming
+                startDist = currentDist;
+            }
+            updateTransform();
+        }, { passive: false });
+
+        imgContainer.addEventListener('touchend', (e) => {
+            if (e.touches.length < 2) startDist = 0;
+            if (e.touches.length === 0) isDragging = false;
+        });
+
+        // Mouse Events (Desktop testing fallback)
+        imgContainer.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.pageX - posX;
+            startY = e.pageY - posY;
+        });
+        imgContainer.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            posX = e.pageX - startX;
+            posY = e.pageY - startY;
+            updateTransform();
+        });
+        imgContainer.addEventListener('mouseup', () => isDragging = false);
+        imgContainer.addEventListener('mouseleave', () => isDragging = false);
+        // ------------------------------------------
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
