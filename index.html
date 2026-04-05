@@ -101,4 +101,49 @@
         }
 
         function zoomImg(step) {
-            currentZoom = Math.max
+            currentZoom = Math.max(0.25, currentZoom + step);
+            document.getElementById('overviewImg').style.transform = `scale(${currentZoom})`;
+        }
+
+        function resetZoom() {
+            currentZoom = 1;
+            document.getElementById('overviewImg').style.transform = `scale(1)`;
+        }
+
+        function renderDecks() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const container = document.getElementById('deckList');
+            container.innerHTML = '';
+            let hasResults = false;
+
+            decks.forEach(deck => {
+                const matchedVenues = deck.venues.filter(v => (v.name.toLowerCase().includes(query) || v.desc.toLowerCase().includes(query)) && (!showFavorites || favorites.includes(v.name)));
+                const finalVenues = (!showFavorites && deck.name.toLowerCase().includes(query)) ? deck.venues.filter(v => !showFavorites || favorites.includes(v.name)) : matchedVenues;
+
+                if (finalVenues.length > 0) {
+                    hasResults = true;
+                    let html = `<div class="bg-white rounded-xl shadow-md border-t-4 border-green-600 overflow-hidden"><div class="bg-purple-50 px-4 py-2 font-black text-purple-900 border-b border-purple-100 uppercase tracking-wide">${deck.name}</div><ul class="divide-y divide-purple-50">`;
+                    finalVenues.forEach(v => {
+                        const isFav = favorites.includes(v.name);
+                        
+                        // FIX: Escape single quotes so the button doesn't crash on "Chef's Table"
+                        const safeName = v.name.replace(/'/g, "\\'"); 
+                        
+                        html += `<li class="px-4 py-3 flex items-start justify-between hover:bg-purple-50/50 transition-colors"><div class="flex flex-col"><span class="text-sm font-bold text-slate-800">${v.name}</span><span class="text-xs text-slate-500">${v.desc}</span></div><button onclick="toggleFav('${safeName}')" class="p-2 text-2xl transition-transform hover:scale-110 ${isFav ? 'text-yellow-500' : 'text-slate-300'}">${isFav ? '★' : '☆'}</button></li>`;
+                    });
+                    container.innerHTML += html + `</ul></div>`;
+                }
+            });
+            if (!hasResults) container.innerHTML = '<div class="text-center py-8 font-bold text-purple-400">No venues found.</div>';
+        }
+
+        renderDecks();
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(err => console.error('SW Error:', err));
+            });
+        }
+    </script>
+</body>
+</html>
