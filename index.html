@@ -5,43 +5,52 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mardi Gras Navigator</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="manifest" href="data:application/manifest+json,{'name':'Mardi Gras Nav','short_name':'MG Nav','start_url':'./','display':'standalone','background_color':'#f8fafc','theme_color':'#0f172a'}">
+    <link rel="manifest" href="data:application/manifest+json,{'name':'Mardi Gras Nav','short_name':'MG Nav','start_url':'./','display':'standalone','background_color':'#fdf4ff','theme_color':'#4c1d95'}">
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans flex flex-col min-h-screen">
+<body class="bg-purple-50 text-slate-800 font-sans flex flex-col min-h-screen">
 
-    <header class="bg-slate-900 text-white p-4 shadow-md sticky top-0 z-10 flex flex-col items-center">
-        <h1 class="text-xl font-bold">Mardi Gras Navigator</h1>
-        <p class="text-xs text-slate-300 mt-1">Offline Mode Ready</p>
+    <header class="bg-purple-900 text-yellow-400 p-4 shadow-md sticky top-0 z-10 flex flex-col items-center">
+        <h1 class="text-xl font-black tracking-wide uppercase">Mardi Gras Navigator</h1>
+        <p class="text-xs text-purple-200 mt-1 font-semibold tracking-widest">OFFLINE READY</p>
     </header>
 
-    <div class="flex bg-white border-b border-slate-200">
-        <button id="tab-dir" class="flex-1 py-3 text-sm font-semibold text-blue-600 border-b-2 border-blue-600" onclick="switchTab('directory')">Directory</button>
-        <button id="tab-map" class="flex-1 py-3 text-sm font-semibold text-slate-500" onclick="switchTab('map')">Deck Map (PDF)</button>
-        <button id="tab-overview" class="flex-1 py-3 text-sm font-semibold text-slate-500" onclick="switchTab('overview')">Overview</button>
+    <div class="flex bg-white border-b border-purple-200 shadow-sm z-20">
+        <button id="tab-directory" class="flex-1 py-3 text-sm font-bold text-purple-800 border-b-4 border-purple-800 flex flex-col items-center gap-1 transition-all" onclick="switchTab('directory')">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
+            Directory
+        </button>
+        <button id="tab-map" class="flex-1 py-3 text-sm font-bold text-slate-400 border-b-4 border-transparent hover:text-purple-600 flex flex-col items-center gap-1 transition-all" onclick="switchTab('map')">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            Deck Map
+        </button>
+        <button id="tab-overview" class="flex-1 py-3 text-sm font-bold text-slate-400 border-b-4 border-transparent hover:text-purple-600 flex flex-col items-center gap-1 transition-all" onclick="switchTab('overview')">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            Overview
+        </button>
     </div>
 
     <main class="flex-1 overflow-auto p-4">
         
         <div id="view-directory" class="max-w-2xl mx-auto space-y-4">
             <div class="flex gap-2">
-                <input type="text" id="searchInput" placeholder="Search venues..." class="w-full px-4 py-3 rounded-xl border border-slate-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" oninput="renderDecks()">
-                <button id="favToggleBtn" onclick="toggleFavFilter()" class="px-4 py-3 rounded-xl border shadow-sm font-semibold bg-white border-slate-200 text-slate-500">☆</button>
+                <input type="text" id="searchInput" placeholder="Search venues..." class="w-full px-4 py-3 rounded-xl border border-purple-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500" oninput="renderDecks()">
+                <button id="favToggleBtn" onclick="toggleFavFilter()" class="px-4 py-3 rounded-xl border shadow-sm font-semibold bg-white border-purple-200 text-purple-400">☆</button>
             </div>
             <div id="deckList" class="space-y-3 pb-8"></div>
         </div>
 
-        <div id="view-map" class="hidden h-[75vh] border border-slate-200 rounded-xl overflow-hidden shadow-sm relative">
+        <div id="view-map" class="hidden h-[75vh] border border-purple-200 rounded-xl overflow-hidden shadow-sm relative">
             <iframe id="pdfFrame" src="./mardi-gras-deck-plan-pdf.pdf#view=FitH" class="w-full h-full bg-slate-200"></iframe>
         </div>
 
-        <div id="view-overview" class="hidden h-[75vh] border border-slate-200 rounded-xl overflow-hidden shadow-sm relative bg-slate-200">
+        <div id="view-overview" class="hidden h-[75vh] border border-purple-200 rounded-xl overflow-hidden shadow-sm relative bg-slate-800">
             <div class="absolute top-2 right-4 flex gap-2 z-10">
-                <button onclick="zoomImg(0.25)" class="bg-slate-900 text-white w-8 h-8 rounded-full opacity-80 hover:opacity-100 shadow-md font-bold">+</button>
-                <button onclick="zoomImg(-0.25)" class="bg-slate-900 text-white w-8 h-8 rounded-full opacity-80 hover:opacity-100 shadow-md font-bold">-</button>
-                <button onclick="resetZoom()" class="bg-slate-900 text-white px-3 h-8 rounded-full opacity-80 hover:opacity-100 shadow-md text-xs font-bold">Reset</button>
+                <button onclick="zoomImg(0.25)" class="bg-yellow-400 text-purple-900 w-8 h-8 rounded-full opacity-90 hover:opacity-100 shadow-lg font-black text-lg">+</button>
+                <button onclick="zoomImg(-0.25)" class="bg-yellow-400 text-purple-900 w-8 h-8 rounded-full opacity-90 hover:opacity-100 shadow-lg font-black text-lg">-</button>
+                <button onclick="resetZoom()" class="bg-yellow-400 text-purple-900 px-3 h-8 rounded-full opacity-90 hover:opacity-100 shadow-lg text-xs font-black uppercase tracking-wide">Reset</button>
             </div>
-            <div class="overflow-auto w-full h-full flex items-center justify-center">
-                <img id="overviewImg" src="./deckmap.png" alt="Deck Overview" class="max-w-none transition-transform origin-center" style="transform: scale(1);">
+            <div class="overflow-auto w-full h-full flex items-center justify-center p-4">
+                <img id="overviewImg" src="./deckmap.png" alt="Deck Overview" class="max-w-none transition-transform origin-center shadow-2xl rounded" style="transform: scale(1);">
             </div>
         </div>
 
@@ -73,7 +82,7 @@
         function toggleFavFilter() {
             showFavorites = !showFavorites;
             const btn = document.getElementById('favToggleBtn');
-            btn.className = showFavorites ? "px-4 py-3 rounded-xl border shadow-sm font-semibold bg-yellow-100 border-yellow-400 text-yellow-700" : "px-4 py-3 rounded-xl border shadow-sm font-semibold bg-white border-slate-200 text-slate-500";
+            btn.className = showFavorites ? "px-4 py-3 rounded-xl border shadow-sm font-semibold bg-yellow-400 border-yellow-500 text-purple-900" : "px-4 py-3 rounded-xl border shadow-sm font-semibold bg-white border-purple-200 text-purple-400";
             btn.innerText = showFavorites ? '⭐' : '☆';
             renderDecks();
         }
@@ -84,53 +93,12 @@
                 
                 const tabBtn = document.getElementById(`tab-${t}`);
                 if (t === tab) {
-                    tabBtn.className = "flex-1 py-3 text-sm font-semibold text-blue-600 border-b-2 border-blue-600";
+                    tabBtn.className = "flex-1 py-3 text-sm font-bold text-purple-800 border-b-4 border-purple-800 flex flex-col items-center gap-1 transition-all";
                 } else {
-                    tabBtn.className = "flex-1 py-3 text-sm font-semibold text-slate-500 hover:bg-slate-50";
+                    tabBtn.className = "flex-1 py-3 text-sm font-bold text-slate-400 border-b-4 border-transparent hover:text-purple-600 flex flex-col items-center gap-1 transition-all";
                 }
             });
         }
 
         function zoomImg(step) {
-            currentZoom = Math.max(0.25, currentZoom + step); // Prevents zooming out too far
-            document.getElementById('overviewImg').style.transform = `scale(${currentZoom})`;
-        }
-
-        function resetZoom() {
-            currentZoom = 1;
-            document.getElementById('overviewImg').style.transform = `scale(1)`;
-        }
-
-        function renderDecks() {
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            const container = document.getElementById('deckList');
-            container.innerHTML = '';
-            let hasResults = false;
-
-            decks.forEach(deck => {
-                const matchedVenues = deck.venues.filter(v => (v.name.toLowerCase().includes(query) || v.desc.toLowerCase().includes(query)) && (!showFavorites || favorites.includes(v.name)));
-                const finalVenues = (!showFavorites && deck.name.toLowerCase().includes(query)) ? deck.venues.filter(v => !showFavorites || favorites.includes(v.name)) : matchedVenues;
-
-                if (finalVenues.length > 0) {
-                    hasResults = true;
-                    let html = `<div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden"><div class="bg-slate-100 px-4 py-2 font-bold text-slate-700 border-b border-slate-200">${deck.name}</div><ul class="divide-y divide-slate-100">`;
-                    finalVenues.forEach(v => {
-                        const isFav = favorites.includes(v.name);
-                        html += `<li class="px-4 py-3 flex items-start justify-between"><div class="flex flex-col"><span class="text-sm font-semibold text-slate-800">${v.name}</span><span class="text-xs text-slate-500">${v.desc}</span></div><button onclick="toggleFav('${v.name}')" class="p-2 text-xl ${isFav ? 'text-yellow-500' : 'text-slate-300'}">${isFav ? '★' : '☆'}</button></li>`;
-                    });
-                    container.innerHTML += html + `</ul></div>`;
-                }
-            });
-            if (!hasResults) container.innerHTML = '<div class="text-center py-8 text-slate-500">No venues found.</div>';
-        }
-
-        renderDecks();
-
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').catch(err => console.error('SW Error:', err));
-            });
-        }
-    </script>
-</body>
-</html>
+            currentZoom = Math.max
